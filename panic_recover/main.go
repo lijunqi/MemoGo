@@ -17,7 +17,7 @@ func main() {
 	var user = ""
 	go func() {
 		defer func() {
-			fmt.Println("Defer caller")
+			fmt.Println("Defer Recover catch.")
 			if err := recover(); err != nil {
 				fmt.Printf("Catch exception: %v\n", err)
 			}
@@ -25,21 +25,22 @@ func main() {
 
 		func() {
 			defer func() {
-				fmt.Println("Defer do something")
+				fmt.Println("Defer Do something")
 			}()
 
 			fmt.Println("Do something.")
 
 			if user == "" {
 				x := 123
+				fmt.Println("Call panic.")
 				panic(x)
 			}
 
-			fmt.Println("After panic")
+			fmt.Println("After panic") // NOT execute
 		}()
 
 	}()
 
-	time.Sleep(1 * time.Second)
+	time.Sleep(2 * time.Second)
 	fmt.Println("Main quit.")
 }
