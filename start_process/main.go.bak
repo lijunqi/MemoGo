@@ -1,0 +1,88 @@
+package main
+
+import (
+	"fmt"
+	"syscall"
+	"unsafe"
+)
+
+var (
+	kernel32       = syscall.NewLazyDLL("kernel32.dll")
+	createProcessW = kernel32.NewProc("CreateProcessWithLogonW")
+)
+
+type startupInfo struct {
+	cb            uint32
+	reserved      *uint16
+	desktop       *uint16
+	title         *uint16
+	x             uint32
+	y             uint32
+	xSize         uint32
+	ySize         uint32
+	xCountChars   uint32
+	yCountChars   uint32
+	fillAttribute uint32
+	flags         uint32
+	showWindow    uint16
+	reserved2     uint16
+	reserved3     *byte
+	stdInput      syscall.Handle
+	stdOutput     syscall.Handle
+	stdError      syscall.Handle
+}
+
+type processInformation struct {
+	process   syscall.Handle
+	thread    syscall.Handle
+	processId uint32
+	threadId  uint32
+}
+
+func main() {
+	var si startupInfo
+	var pi processInformation
+	cmd := "C:\\Windows\\System32\\notepad.exe" // Replace with the path to the executable you want to run
+	domain := ""                                // The domain of the user
+	username := "RA-INT\\JLi21"                 // The username
+	password := "1394112257719850214"           // The password
+	currentDirectory := "."                     // The current working directory for the process
+
+	err := createProcessWithLogon(username, domain, password, cmd, currentDirectory, &si, &pi)
+	if err != nil {
+		fmt.Println("Error:", err)
+		return
+	}
+	fmt.Println("Process started with PID:", pi.processId)
+
+	// Close process and thread handles to prevent resource leaks
+	syscall.CloseHandle(pi.process)
+	syscall.CloseHandle(pi.thread)
+}
+
+func createProcessWithLogon(username, domain, password, cmd, currentDirectory string, si *startupInfo, pi *processInformation) error {
+	argv, _ := syscall.UTF16PtrFromString(cmd)
+	domainPtr, _ := syscall.UTF16FromString(domain)
+	usernamePtr, _ := syscall.UTF16FromString(username)
+	passwordPtr, _ := syscall.UTF16FromString(password)
+	dirPtr, _ := syscall.UTF16FromString(currentDirectory)
+
+	a, b, err := createProcessW.Call(
+		uintptr(unsafe.Pointer(&domainPtr[0])),
+		uintptr(unsafe.Pointer(&usernamePtr[0])),
+		uintptr(unsafe.Pointer(&passwordPtr[0])),
+		0, // Logon flags
+		0, // Application name (use command line)
+		argv,
+		0, // Process attributes
+		uintptr(unsafe.Pointer(&dirPtr[0])),
+		uintptr(unsafe.Pointer(si)),
+		uintptr(unsafe.Pointer(pi)))
+
+	fmt.Printf("a: %s\n", a)
+	fmt.Printf("b: %s\n", b)
+	if err != nil && err.(syscall.Errno) != 0 {
+		return err
+	}
+	return nil
+}
