@@ -20,17 +20,18 @@ func foo() {
 				select {
 				case <-ctx.Done():
 					log.Println("Done!")
-					time.Sleep(2000 * time.Millisecond)
+					time.Sleep(2 * time.Second)
 					log.Println("Return!")
 					return // returning not to leak the goroutine
 				case dst <- n:
 					log.Printf("Do %d\n", n)
-					time.Sleep(5000 * time.Millisecond)
+					time.Sleep(5 * time.Second)
 					log.Printf("Complete %d\n", n)
 					n++
 				}
 			}
 		}()
+		log.Println("******")
 		return dst
 	}
 
@@ -49,6 +50,6 @@ func foo() {
 func main() {
 	foo()
 	log.Println("Out of foo.")
-	time.Sleep(10000 * time.Millisecond)
+	time.Sleep(10 * time.Second)
 	log.Println("Quit.")
 }
