@@ -5,15 +5,14 @@ import (
 	"archive/zip"
 	"fmt"
 	"io"
-	"io/fs"
 	"log"
 	"os"
 	"path/filepath"
 )
 
-func ZipFile() {
+func ZipFile(fPath string) {
 	fmt.Println("creating zip archive")
-	//Create a new zip archive and named archive.zip
+	// Create zip archive
 	archive, err := os.Create("archive.zip")
 	if err != nil {
 		panic(err)
@@ -25,27 +24,20 @@ func ZipFile() {
 	defer archive.Close()
 	fmt.Println("archive file created successfully")
 
-	// Traverse directory
-	err = filepath.WalkDir("target_folder", func(path string, d fs.DirEntry, err error) error {
-		fmt.Println(path, d.Name(), "directory?", d.IsDir())
-		return nil
-	})
-	if err != nil {
-		log.Fatalf("impossible to walk directories: %s", err)
-	}
-
-	//Create a new zip writer
+	// Create zip writer
 	zipWriter := zip.NewWriter(archive)
+	defer zipWriter.Close()
 	fmt.Println("opening first file")
-	//Add files to the zip archive
-	f1, err := os.Open("qq/")
+
+	// Add files to the zip archive
+	f1, err := os.Open(fPath)
 	if err != nil {
 		panic(err)
 	}
 	defer f1.Close()
 
 	fmt.Println("adding file to archive..")
-	w1, err := zipWriter.Create("aaa")
+	w1, err := zipWriter.Create("inzip.txt")
 	if err != nil {
 		panic(err)
 	}
@@ -53,10 +45,9 @@ func ZipFile() {
 		panic(err)
 	}
 	fmt.Println("closing archive")
-	zipWriter.Close()
 }
 
-func main() {
+func ZipFolder() {
 	zf, err := os.Create("output.zip")
 	if err != nil {
 		panic(err)
@@ -71,27 +62,28 @@ func main() {
 		if err != nil {
 			return err
 		}
+
 		if fi.IsDir() {
 			path = fmt.Sprintf("%s%c", path, os.PathSeparator)
-			//return nil
-		}
-		srcFile, err := os.Open(path)
-		if err != nil {
+			_, err := w.Create(path)
 			return err
-		}
-		defer srcFile.Close()
+		} else {
+			// Ensure that `path` is not absolute; it should not start with "/".
+			// This snippet happens to work because I don't use
+			// absolute paths, but ensure your real-world code
+			// transforms path into a zip-root relative path.
+			fInZip, err := w.Create(path)
+			if err != nil {
+				return err
+			}
 
-		// Ensure that `path` is not absolute; it should not start with "/".
-		// This snippet happens to work because I don't use
-		// absolute paths, but ensure your real-world code
-		// transforms path into a zip-root relative path.
-		f, err := w.Create(path)
-		if err != nil {
-			return err
-		}
+			fSrc, err := os.Open(path)
+			if err != nil {
+				return err
+			}
+			defer fSrc.Close()
 
-		if !fi.IsDir() {
-			_, err = io.Copy(f, srcFile)
+			_, err = io.Copy(fInZip, fSrc)
 			if err != nil {
 				return err
 			}
@@ -99,8 +91,16 @@ func main() {
 
 		return nil
 	}
-	err = filepath.Walk("target", walker)
+
+	root := "C:\\Users\\JLi21\\Desktop\\MemoGo\\zip\\target"
+	err = filepath.Walk(root, walker)
 	if err != nil {
 		panic(err)
 	}
+}
+
+func main() {
+	fPath := "C:\\Users\\JLi21\\Desktop\\MemoGo\\zip\\target.txt"
+	ZipFile(fPath)
+	//ZipFolder()
 }
