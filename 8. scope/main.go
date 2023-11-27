@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"my-scope/packageone"
+)
 
 /*
  * 任何在函数外部（也就是包级语法域）声明的名字可以在同一个包的任何源文件中访问的。
@@ -16,6 +19,8 @@ func g(x int) int {
 	return x + 1
 }
 
+var myVar = "This is a package level variable"
+
 func main() {
 	// 和for循环类似，if和switch语句也会在条件部分创建隐式词法域，
 	// 还有它们对应的执行体词法域
@@ -29,4 +34,8 @@ func main() {
 		fmt.Println("Branch 3:")
 		fmt.Println(x, y)
 	}
+
+	// variables
+	var blockVar = "This is the block level variable"
+	packageone.PrintMe(myVar, blockVar)
 }
