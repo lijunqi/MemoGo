@@ -89,6 +89,8 @@ func main() {
 	fmt.Println(m)
 	delete(m, "foo")
 	fmt.Println("After delete Foo: ", m)
+	delete(m, "NotExist")
+	fmt.Println("After delete NotExist: ", m)
 
 	// *** struct: the only collection contain different types
 	type user struct {

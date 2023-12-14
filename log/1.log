@@ -1,0 +1,6 @@
+LOGGER_1: 2023/12/12 08:16:17.035626 main.go:16: [1]Hello from default logger1.
+LOGGER_1: 2023/12/12 08:16:49.744621 main.go:16: [1]Hello from default logger1.
+LOGGER_1: 2023/12/12 08:17:38.638581 main.go:16: [1]Hello from default logger1.
+LOGGER_1: 2023/12/12 08:19:43.490140 main.go:16: [1]Hello from default logger1.
+LOGGER_1: 2023/12/13 00:03:04.700058 main.go:16: [1]Hello from default logger1.
+LOGGER_1: 2023/12/13 02:56:18.648736 main.go:16: [1]Hello from default logger1.
