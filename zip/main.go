@@ -47,60 +47,78 @@ func ZipFile(fPath string) {
 	fmt.Println("closing archive")
 }
 
-func ZipFolder() {
-	zf, err := os.Create("output.zip")
+func ZipFolder(srcFolder, dstZipFile string) {
+	srcParentFolder, _ := filepath.Split(srcFolder)
+	startIdx := len(srcParentFolder)
+	log.Printf("=== Start Index: %d\n", startIdx)
+	zf, err := os.Create(dstZipFile)
 	if err != nil {
 		panic(err)
 	}
 	defer zf.Close()
 
-	w := zip.NewWriter(zf)
-	defer w.Close()
+	zipWriter := zip.NewWriter(zf)
+	defer zipWriter.Close()
 
 	walker := func(path string, fi os.FileInfo, err error) error {
+		log.Printf("dst is %s\n", dstZipFile)
 		log.Printf("Crawling: %#v\n", path)
 		if err != nil {
+			log.Printf("xx Crawling error: %v\n", err)
 			return err
 		}
 
 		if fi.IsDir() {
 			path = fmt.Sprintf("%s%c", path, os.PathSeparator)
-			_, err := w.Create(path)
+			log.Printf("  Create Folder zipWriter: %s\n", path[startIdx:])
+			_, err := zipWriter.Create(path[startIdx:])
+			if err != nil {
+				log.Printf("xx zipWriter error: %v\n", err)
+			}
 			return err
 		} else {
 			// Ensure that `path` is not absolute; it should not start with "/".
 			// This snippet happens to work because I don't use
 			// absolute paths, but ensure your real-world code
 			// transforms path into a zip-root relative path.
-			fInZip, err := w.Create(path)
+			fInZip, err := zipWriter.Create(path[startIdx:])
+			log.Printf("    zipwriter create: %s\n", path)
 			if err != nil {
+				log.Printf("xxx inzip error: %v\n", err)
 				return err
 			}
 
 			fSrc, err := os.Open(path)
 			if err != nil {
+				log.Printf("xxx Open src error: %v\n", err)
 				return err
 			}
 			defer fSrc.Close()
 
-			_, err = io.Copy(fInZip, fSrc)
+			var written int64
+			written, err = io.Copy(fInZip, fSrc)
 			if err != nil {
+				log.Printf("xxx Copy to zip error: %v\n", err)
 				return err
 			}
+			log.Printf("... written = %d\n", written)
 		}
 
 		return nil
 	}
 
-	root := "C:\\Users\\JLi21\\Desktop\\MemoGo\\zip\\target"
-	err = filepath.Walk(root, walker)
+	err = filepath.Walk(srcFolder, walker)
 	if err != nil {
 		panic(err)
 	}
 }
 
 func main() {
-	fPath := "C:\\Users\\JLi21\\Desktop\\MemoGo\\zip\\target.txt"
-	ZipFile(fPath)
-	//ZipFolder()
+	//fPath := "C:\\Users\\JLi21\\Desktop\\MemoGo\\zip\\target.txt"
+	//ZipFile(fPath)
+
+	ZipFolder("C:\\Users\\Admin\\Desktop\\MemoGo\\zip\\target", "C:\\Users\\Public\\1.zip")
+	ZipFolder("C:\\Users\\Admin\\Desktop\\MemoGo\\zip\\target\\", "C:\\Users\\Public\\2.zip")
+	ZipFolder("target", "C:\\Users\\Public\\3.zip")
+	ZipFolder("target\\", "C:\\Users\\Public\\4.zip")
 }
