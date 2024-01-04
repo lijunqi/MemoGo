@@ -48,9 +48,11 @@ func ZipFile(fPath string) {
 }
 
 func ZipFolder(srcFolder, dstZipFile string) {
-	srcParentFolder, _ := filepath.Split(srcFolder)
-	startIdx := len(srcParentFolder)
+	srcParentFolder, srcFile := filepath.Split(srcFolder)
+	srcFolder = filepath.Join(srcParentFolder, srcFile) + string(os.PathSeparator)
+	startIdx := len(srcFolder)
 	log.Printf("=== Start Index: %d\n", startIdx)
+	log.Printf("=== src folder: %s\n", srcFolder)
 	zf, err := os.Create(dstZipFile)
 	if err != nil {
 		panic(err)
@@ -70,6 +72,8 @@ func ZipFolder(srcFolder, dstZipFile string) {
 
 		if fi.IsDir() {
 			path = fmt.Sprintf("%s%c", path, os.PathSeparator)
+			log.Printf("------ path: %s\n", path)
+			log.Printf("------ path len: %d\n", len(path))
 			log.Printf("  Create Folder zipWriter: %s\n", path[startIdx:])
 			_, err := zipWriter.Create(path[startIdx:])
 			if err != nil {
@@ -117,8 +121,12 @@ func main() {
 	//fPath := "C:\\Users\\JLi21\\Desktop\\MemoGo\\zip\\target.txt"
 	//ZipFile(fPath)
 
-	ZipFolder("C:\\Users\\Admin\\Desktop\\MemoGo\\zip\\target", "C:\\Users\\Public\\1.zip")
-	ZipFolder("C:\\Users\\Admin\\Desktop\\MemoGo\\zip\\target\\", "C:\\Users\\Public\\2.zip")
-	ZipFolder("target", "C:\\Users\\Public\\3.zip")
-	ZipFolder("target\\", "C:\\Users\\Public\\4.zip")
+	f := filepath.Join("C:\\a", "b", "c", ".zip")
+	log.Println(f)
+
+	//ZipFolder("C:\\Users\\jli21\\Desktop\\MemoGo\\zip\\target", "C:\\Users\\Public\\1.zip")
+	//ZipFolder("C:\\Users\\jli21\\Desktop\\MemoGo\\zip\\target\\", "C:\\Users\\Public\\2.zip")
+	//ZipFolder("C:\\Users\\jli21\\Desktop\\MemoGo\\zip\\target/", "C:\\Users\\Public\\3.zip")
+	//ZipFolder("target", "C:\\Users\\Public\\4.zip")
+	//ZipFolder("target\\", "C:\\Users\\Public\\5.zip")
 }
