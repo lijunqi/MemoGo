@@ -1,43 +1,38 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
-	"os"
+	"log"
 	"os/exec"
-	"os/user"
 )
 
 func main() {
-	fmt.Print("=== Start ===")
-	//username := "RA-INT\\JLi21"
-	//u, err := user.Lookup(username)
-	u, err := user.Current()
+	cmd := exec.Command("cmd", "/c", "echo", `{"Name": "bob"}`)
+	stdout, err := cmd.StdoutPipe()
 	if err != nil {
-		fmt.Println("xxxError:", err, u.Username)
-		return
+		log.Fatal(err)
 	}
-
-	fmt.Printf("User: %s (UID: %s)\n", u.Username, u.Uid)
-
-	proc := "C:\\Program Files\\Microsoft Office\\root\\Office16\\EXCEL.EXE"
-	cmd := exec.Command(proc)
-
-	//cmd := exec.Command("runas", "/user:JLi21", proc)
-
-	// Set the working directory if needed.
-	//cmd.Dir = "path_to_working_directory"
-
-	// Start the command.
 	if err := cmd.Start(); err != nil {
-		fmt.Printf("xxx Error starting the process: %v\n", err)
-		os.Exit(1)
+		log.Fatal(err)
 	}
-
-	// Wait for the command to finish.
+	var person struct {
+		Name string
+	}
+	if err := json.NewDecoder(stdout).Decode(&person); err != nil {
+		log.Printf("error decode: %v\n", err)
+	}
 	if err := cmd.Wait(); err != nil {
-		fmt.Printf("xxx Error waiting for the process: %v\n", err)
-		os.Exit(1)
+		log.Printf("error wait: %v\n", err)
+	}
+	fmt.Printf("content: %s\n", person.Name)
+
+	err = stdout.Close()
+	if err != nil {
+		log.Printf("xxx Error: %v\n", err.Error())
+	} else {
+		log.Println("close good")
 	}
 
-	fmt.Print("=== Done ===")
+	log.Println("Done.")
 }
