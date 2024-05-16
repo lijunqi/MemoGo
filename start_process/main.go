@@ -1,14 +1,15 @@
 package main
 
 import (
-	"encoding/json"
+	"bufio"
 	"fmt"
 	"log"
+	"os"
 	"os/exec"
 )
 
 func main() {
-	cmd := exec.Command("cmd", "/c", "echo", `{"Name": "bob"}`)
+	cmd := exec.Command("ping", "127.0.0.1")
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		log.Fatal(err)
@@ -16,22 +17,19 @@ func main() {
 	if err := cmd.Start(); err != nil {
 		log.Fatal(err)
 	}
-	var person struct {
-		Name string
+
+	scanner := bufio.NewScanner(stdout)
+	for scanner.Scan() {
+		log.Printf("[StdOut]%s\n", scanner.Text())
 	}
-	if err := json.NewDecoder(stdout).Decode(&person); err != nil {
-		log.Printf("error decode: %v\n", err)
+	if err := scanner.Err(); err != nil {
+		fmt.Fprintln(os.Stderr, "reading standard input:", err)
+	} else {
+		fmt.Println("Scan no error.")
 	}
+
 	if err := cmd.Wait(); err != nil {
 		log.Printf("error wait: %v\n", err)
-	}
-	fmt.Printf("content: %s\n", person.Name)
-
-	err = stdout.Close()
-	if err != nil {
-		log.Printf("xxx Error: %v\n", err.Error())
-	} else {
-		log.Println("close good")
 	}
 
 	log.Println("Done.")
