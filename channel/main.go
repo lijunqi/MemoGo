@@ -59,8 +59,8 @@ func Bar() {
 
 // ~ 3
 func helper(c chan<- error) {
-	time.Sleep(5 * time.Second)
-	c <- errors.New("") // send errors/nil on c
+	time.Sleep(3 * time.Second)
+	c <- errors.New("hello world!!") // send errors/nil on c
 }
 
 func NonBlockingRead() error {
@@ -74,13 +74,12 @@ func NonBlockingRead() error {
 	quit := false
 	for !quit {
 		select {
-		case <-c:
+		case err := <-c:
 			log.Println("Quit")
-			err := <-c
-			log.Printf("resp: %v\n", err)
+			log.Printf("Received resp: %v\n", err)
 			quit = true
 		default:
-			log.Println("Default")
+			log.Println("[Default]No message received.")
 			time.Sleep(time.Second)
 		}
 	}
@@ -89,8 +88,58 @@ func NonBlockingRead() error {
 	return nil
 }
 
+// ~ 4
+func SelectWithTimeout() {
+	log.Println("[Start]Select with Timeout.")
+	chan1 := make(chan string)
+
+	go func() {
+		time.Sleep(2 * time.Second)
+		chan1 <- "result"
+	}()
+
+	select {
+	case res := <-chan1:
+		log.Println(res)
+	case <-time.After(1 * time.Second):
+		log.Println("timeout")
+	}
+	log.Println("[Done]Select with Timeout.")
+}
+
+// ~ 5
+func ReceiveFromMultipleChannels() {
+	log.Println("[Start]Receive from multi-channel.")
+	chan1 := make(chan string)
+	chan2 := make(chan string)
+
+	go func() {
+		time.Sleep(1 * time.Second)
+		chan1 <- "from channel 1"
+	}()
+
+	go func() {
+		time.Sleep(2 * time.Second)
+		chan2 <- "from channel 2"
+	}()
+
+	for i := 0; i < 2; i++ {
+		select {
+		case msg1 := <-chan1:
+			log.Println("Received", msg1)
+		case msg2 := <-chan2:
+			log.Println("Received", msg2)
+		}
+	}
+	log.Println("[Done]Receive from multi-channel.")
+}
+
 func main() {
 	//CloseChecking()
 	//Bar()
-	NonBlockingRead()
+	//CalFibonacci(11)
+
+	//NonBlockingRead()
+	//SelectWithTimeout()
+	ReceiveFromMultipleChannels()
 }

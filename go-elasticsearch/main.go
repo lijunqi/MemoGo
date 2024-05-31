@@ -103,7 +103,8 @@ func main() {
 		search(es, indexName)
 	*/
 
-	RunPerformance()
+	PerfSingleInsert()
+
 	indexList := []string{}
 	for i := 0; i < 10; i++ {
 		indexList = append(indexList, fmt.Sprintf("myclient-%d", i))

@@ -15,7 +15,7 @@ type LogDoc struct {
 	Content string `json:"content"`
 }
 
-func RunPerformance() {
+func PerfSingleInsert() {
 	const nCli = 10
 	const nReq = 100
 
