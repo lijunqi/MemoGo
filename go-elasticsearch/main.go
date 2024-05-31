@@ -6,9 +6,13 @@ import (
 	"io"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/elastic/go-elasticsearch/v8"
 )
+
+const nCli = 1
+const nReq = 1000
 
 func NewClient() (*elasticsearch.TypedClient, error) {
 	cfg := elasticsearch.Config{
@@ -85,6 +89,8 @@ func DeleteIndex(idxList []string) {
 }
 
 func main() {
+	log.Println("====== Start ======")
+	startTime := time.Now()
 	// ~ ES config
 	/*
 		cfg := elasticsearch.Config{
@@ -103,12 +109,19 @@ func main() {
 		search(es, indexName)
 	*/
 
-	PerfSingleInsert()
+	//PerfSingleInsert()
 
-	indexList := []string{}
-	for i := 0; i < 10; i++ {
-		indexList = append(indexList, fmt.Sprintf("myclient-%d", i))
+	//PerfBulkInsert()
+
+	del := 1
+	if del == 1 {
+		indexList := []string{}
+		for i := 0; i < nCli; i++ {
+			indexList = append(indexList, fmt.Sprintf("myclient-%d", i))
+		}
+		DeleteIndex(indexList)
 	}
-	//DeleteIndex(indexList)
 
+	elapstedTime := time.Since(startTime)
+	log.Printf("[Done]Elapsted Time: %.3f sec\n", float64(elapstedTime)/float64(time.Second))
 }

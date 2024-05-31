@@ -1,41 +1,32 @@
 package main
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/elastic/go-elasticsearch/v8"
-	//"github.com/elastic/go-elasticsearch/v8/esutil"
 )
 
 type LogDoc struct {
+	ID      int    `json:"id"`
 	Name    string `json:"name"`
 	Content string `json:"content"`
 }
 
 func PerfSingleInsert() {
-	const nCli = 10
-	const nReq = 100
-
-	cfg := elasticsearch.Config{
-		Addresses: []string{
-			"http://10.24.11.116:9200",
-		},
-	}
-
 	var channels [nCli]chan int
 	for i := range channels {
 		channels[i] = make(chan int)
 	}
 
-	startTime := time.Now()
 	for i := 0; i < nCli; i++ {
 		go func(idx int) {
 			log.Printf("[Client: %d]: Start\n", idx)
 			ctx := context.Background()
-			es, err := elasticsearch.NewTypedClient(cfg)
+			es, err := NewClient()
 			if err != nil {
 				log.Printf("xxx Connect failed: %v\n", err)
 			} else {
@@ -64,8 +55,37 @@ func PerfSingleInsert() {
 		<-channels[i]
 	}
 
-	elapstedTime := time.Since(startTime)
-
-	log.Printf("Elapsted Time: %.2f sec\n", float64(elapstedTime)/float64(time.Second))
 	log.Println("Done")
+}
+
+func PerfBulkInsert() {
+	cfg := elasticsearch.Config{
+		Addresses: []string{
+			"http://10.24.11.116:9200",
+		},
+	}
+
+	es, err := elasticsearch.NewClient(cfg)
+	if err != nil {
+		log.Printf("xxx Connect failed: %v\n", err)
+	} else {
+		var buf bytes.Buffer
+		for j := 0; j < nReq; j++ {
+			doc := LogDoc{ID: j, Name: "cli[0]", Content: fmt.Sprintf("Number %d", j)}
+			meta := []byte(fmt.Sprintf(`{ "index" : { "_id" : "%d" } }%s`, doc.ID, "\n"))
+			data, _ := json.Marshal(doc)
+			data = append(data, "\n"...)
+			buf.Grow(len(meta) + len(data))
+			buf.Write(meta)
+			buf.Write(data)
+		}
+
+		indexName := "myclient-0"
+		_, err := es.Bulk(bytes.NewReader(buf.Bytes()), es.Bulk.WithIndex(indexName))
+		if err != nil {
+			log.Fatalf("Failure indexing %s", err)
+		} else {
+			log.Printf("[Success]Bulk insert.\n")
+		}
+	}
 }
