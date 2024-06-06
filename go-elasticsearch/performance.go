@@ -6,8 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-
-	"github.com/elastic/go-elasticsearch/v8"
 )
 
 type LogDoc struct {
@@ -26,7 +24,7 @@ func PerfSingleInsert() {
 		go func(idx int) {
 			log.Printf("[Client: %d]: Start\n", idx)
 			ctx := context.Background()
-			es, err := NewClient()
+			es, err := NewTypedCli()
 			if err != nil {
 				log.Printf("xxx Connect failed: %v\n", err)
 			} else {
@@ -59,24 +57,19 @@ func PerfSingleInsert() {
 }
 
 func PerfBulkInsert() {
-	cfg := elasticsearch.Config{
-		Addresses: []string{
-			"http://10.24.11.116:9200",
-		},
-	}
-
-	es, err := elasticsearch.NewClient(cfg)
+	es, err := NewCli()
 	if err != nil {
 		log.Printf("xxx Connect failed: %v\n", err)
 	} else {
 		var buf bytes.Buffer
 		for j := 0; j < nReq; j++ {
 			doc := LogDoc{ID: j, Name: "cli[0]", Content: fmt.Sprintf("Number %d", j)}
-			meta := []byte(fmt.Sprintf(`{ "index" : { "_id" : "%d" } }%s`, doc.ID, "\n"))
+			//meta := []byte(fmt.Sprintf(`{ "index" : { "_id" : "%d" } }%s`, doc.ID, "\n"))
 			data, _ := json.Marshal(doc)
 			data = append(data, "\n"...)
-			buf.Grow(len(meta) + len(data))
-			buf.Write(meta)
+			//buf.Grow(len(meta) + len(data))
+			buf.Grow(len(data))
+			//buf.Write(meta)
 			buf.Write(data)
 		}
 
