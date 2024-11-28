@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"slices"
+)
 
 /*
  * 切片的底层是数组，这意味着Go为每一个切片创建一个底层数组
@@ -36,4 +39,9 @@ func main() {
 	for idx, item := range integer {
 		fmt.Printf("slice[%d] = %d\n", idx, item)
 	}
+
+	// * Contains
+	strList := []string{"a", "b", "c", "d", "e"}
+	fmt.Println(slices.Contains(strList, "c"))
+	fmt.Println(slices.Contains(strList, "z"))
 }
