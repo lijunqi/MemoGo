@@ -6,7 +6,7 @@ import (
 )
 
 /* 1.
- * defers run in the reverse order that you define,
+ * defers run in the REVERSE ORDER that you define,
  * it means that the last written is the first executed.
  * 多个defer的执行顺序为"后进先出".
  */
@@ -15,6 +15,16 @@ func for_loop_defer() {
 	for i := 0; i < 5; i++ {
 		defer fmt.Println(i)
 	}
+}
+
+func Print(s string) {
+	fmt.Println(s)
+}
+
+func defer_order() {
+	defer Print("1 first")
+	defer Print("2 second")
+	defer Print("3 third")
 }
 
 func block_defer() {
@@ -32,7 +42,7 @@ func block_defer() {
 func pass_by_value1() {
 	/*
 	 * 调用 defer 关键字会立刻拷贝函数(Println)中引用的外部参数,
-	 * 所以 time.Since(startedAt) 的结果不是在 main 函数退出之前计算的,
+	 * 所以 time.Since(startedAt) 的结果不是在此函数退出之前计算的,
 	 * 而是在 defer 关键字调用时计算的,最终导致上述代码输出 0s
 	 */
 	fmt.Println("=== Pass by value 1 ===")
@@ -94,6 +104,9 @@ func deferFuncReturn_2() (result int) {
 // =========================================================
 func main() {
 	for_loop_defer() // Output: 4 3 2 1 0
+
+	defer_order()
+
 	block_defer()    // Output: 1 2 3
 	pass_by_value1()
 	pass_by_value2()
